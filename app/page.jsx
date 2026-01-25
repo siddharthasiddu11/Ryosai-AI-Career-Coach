@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { faqs } from "@/data/faqs";
 import { features } from "@/data/feature";
 import { howItWorks } from "@/data/howItWorks";
-import { testimonial } from "@/data/testinomials";
+import { testimonial } from "@/data/testimonials";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+
 
 
 export default function Home() {

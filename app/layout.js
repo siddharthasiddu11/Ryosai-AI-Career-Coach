@@ -1,9 +1,11 @@
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+
 import "./globals.css";
-import Header from "@/components/header";
+
 import { ClerkProvider } from "@clerk/nextjs";
 import { neobrutalism } from "@clerk/themes";
+import { ThemeProvider } from "@/components/theme-provider";
+import Header from "@/components/header";
 
 export const runtime = "nodejs";
 
