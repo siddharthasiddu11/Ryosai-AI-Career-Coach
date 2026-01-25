@@ -5,6 +5,8 @@ import Header from "@/components/header";
 import { ClerkProvider } from "@clerk/nextjs";
 import { neobrutalism } from "@clerk/themes";
 
+export const runtime = "nodejs";
+
 const inter = Inter({
   subsets: ["latin"],
 });
