@@ -17,19 +17,19 @@ export async function updateUser(data) {
         const result = await db.$transaction(
             async (tx) => {
                 // find if industry exists
-                const industryInsight = await tx.industryInsights.findUnique({
-                    where: { industryId: data.industryId },
+                let industryInsight = await tx.industryInsight.findUnique({
+                    where: { industry: data.industry },
                 });
                 //If industry doesnt exists
                 if (!industryInsight) {
-                    const industryInsight = await tx.industryInsights.create({
+                    industryInsight = await tx.industryInsight.create({
                         data: {
-                            industryId: data.industryId,
+                            industry: data.industry,
                             salaryRanges: [],
-                            growthRtae: 0,
-                            demandLevel: "Medium",
+                            growthRate: 0,
+                            demandLevel: "MEDIUM",
                             topSkills: [],
-                            marketOutlook: "Neutral",
+                            marketOutlook: "NEUTRAL",
                             keyTrends: [],
                             recommendedSkills: [],
                             nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
@@ -57,7 +57,7 @@ export async function updateUser(data) {
         })
     } catch (error) {
         console.error("Error updating user and industry:", error.message);
-        throw new Error("Failed to update profile");
+        throw new Error("Failed to update profile" + error.message);
     }
 }
 
