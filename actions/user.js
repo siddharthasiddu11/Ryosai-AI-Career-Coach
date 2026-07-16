@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server"
 import { generateAIInsights } from "./dashboard";
 
+//Update user profile data and also generate AI insights for the industry
 export async function updateUser(data) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");

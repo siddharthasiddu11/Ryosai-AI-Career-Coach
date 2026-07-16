@@ -2,10 +2,16 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server"
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+});
 export async function generateQuiz() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
@@ -37,9 +43,15 @@ export async function generateQuiz() {
   `;
 
     try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const text = response.text();
+        // const result = await model.generateContent(prompt);
+        // const response = result.response;
+        // const text = response.text();
+        const result = await groq.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+        });
+        const text = result.choices[0].message.content;
         const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
         const quiz = JSON.parse(cleanedText);
 
@@ -91,9 +103,14 @@ export async function saveQuizResult(questions, answers, score) {
     `;
 
     try {
-      const tipResult = await model.generateContent(improvementPrompt);
-
-      improvementTip = tipResult.response.text().trim();
+      // const tipResult = await model.generateContent(improvementPrompt);
+      // improvementTip = tipResult.response.text().trim();
+      const tipResult = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: improvementPrompt }],
+          temperature: 0.7,
+      });
+      improvementTip = tipResult.choices[0].message.content.trim();
       console.log(improvementTip);
     } catch (error) {
       console.error("Error generating improvement tip:", error);

@@ -2,10 +2,16 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+const groq = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+});
 
 export const generateAIInsights = async (industry) => {
     const prompt = `
@@ -30,9 +36,15 @@ export const generateAIInsights = async (industry) => {
           - Growth rate should be a percentage.
           - Include at least 5 skills and trends.
         `;
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    // const result = await model.generateContent(prompt);
+    // const response = result.response;
+    // const text = response.text();
+    const result = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+    });
+    const text = result.choices[0].message.content;
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
     const insights = JSON.parse(cleanedText);

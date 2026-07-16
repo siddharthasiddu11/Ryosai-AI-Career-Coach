@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
 import {
   Card,
   CardContent,
@@ -12,12 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
 import {
   Select,
   SelectContent,
@@ -27,128 +26,113 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import useFetch from "@/hooks/use-fetch";
+import { onboardingSchema } from "@/app/lib/schema";
 import { updateUser } from "@/actions/user";
 
 const OnboardingForm = ({ industries }) => {
   const router = useRouter();
-
-  const industryRef = useRef("");
-  const subIndustryRef = useRef("");
-  const experienceRef = useRef(null);
-  const skillsRef = useRef(null);
-  const bioRef = useRef(null);
-
-  const [industry, setIndustry] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState(null);
 
   const {
-    loading,
+    loading: updateLoading,
     fn: updateUserFn,
-    data,
-  } = useFetch(updateUser); // this is for API call to update user 
+    data: updateResult,
+  } = useFetch(updateUser);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm({
+    resolver: zodResolver(onboardingSchema),
+  });
 
-    if (
-      !industryRef.current ||
-      !subIndustryRef.current ||
-      !experienceRef.current.value ||
-      !skillsRef.current.value.trim() ||
-      !bioRef.current.value.trim()
-    ) {
-      toast.error("Please fill all fields");
-      return;
-    }
-
-    await updateUserFn({
-      industry: `${industryRef.current}-${subIndustryRef.current
+  const onSubmit = async (values) => {
+    try {
+      const formattedIndustry = `${values.industry}-${values.subIndustry
         .toLowerCase()
-        .replace(/ /g, "-")}`,
-      experience: parseInt(experienceRef.current.value),
-      skills: skillsRef.current.value.split(",").map((s) => s.trim()).filter(Boolean),
-      bio: bioRef.current.value,
-    });
+        .replace(/ /g, "-")}`;
+
+      await updateUserFn({
+        ...values,
+        industry: formattedIndustry,
+      });
+    } catch (error) {
+      console.error("Onboarding error:", error);
+    }
   };
 
   useEffect(() => {
-    if (data?.success && !loading) {
+    if (updateResult?.success && !updateLoading) {
       toast.success("Profile completed successfully!");
       router.push("/dashboard");
       router.refresh();
     }
-  }, [data, loading, router]);
+  }, [updateResult, updateLoading]);
+
+  const watchIndustry = watch("industry");
 
   return (
     <div className="flex items-center justify-center bg-background">
-      <Card className="mt-10 mx-2 w-full max-w-lg">
+      <Card className="w-full max-w-lg mt-10 mx-2">
         <CardHeader>
           <CardTitle className="gradient-title text-4xl">
             Complete Your Profile
           </CardTitle>
           <CardDescription>
-            Select your industry to get personalized career insights.
+            Select your industry to get personalized career insights and
+            recommendations.
           </CardDescription>
         </CardHeader>
-
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-
-            {/* Industry */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label>Industry</Label>
-
+              <Label htmlFor="industry">Industry</Label>
               <Select
                 onValueChange={(value) => {
-                  industryRef.current = value;
-                  setIndustry(value);
-
-                  const selected = industries.find(
-                    (item) => item.id === value
+                  setValue("industry", value);
+                  setSelectedIndustry(
+                    industries.find((ind) => ind.id === value)
                   );
-
-                  setSelectedIndustry(selected);
-                  subIndustryRef.current = "";
-                }} 
+                  setValue("subIndustry", "");
+                }}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Industry" />
+                <SelectTrigger id="industry" className="w-full">
+                  <SelectValue placeholder="Select an industry" />
                 </SelectTrigger>
-
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Industries</SelectLabel>
-
-                    {industries.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
+                    {industries.map((ind) => (
+                      <SelectItem key={ind.id} value={ind.id}>
+                        {ind.name}
                       </SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              {errors.industry && (
+                <p className="text-sm text-red-500">
+                  {errors.industry.message}
+                </p>
+              )}
             </div>
 
-            {/* Specialization */}
-            {industry && (
+            {watchIndustry && (
               <div className="space-y-2">
-                <Label>Specialization</Label>
-
+                <Label htmlFor="subIndustry">Specialization</Label>
                 <Select
-                  onValueChange={(value) => {
-                    subIndustryRef.current = value;
-                  }}
+                  onValueChange={(value) => setValue("subIndustry", value)}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Specialization" />
+                  <SelectTrigger id="subIndustry" className="w-full">
+                    <SelectValue placeholder="Select your specialization" />
                   </SelectTrigger>
-
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Specializations</SelectLabel>
-
                       {selectedIndustry?.subIndustries.map((sub) => (
                         <SelectItem key={sub} value={sub}>
                           {sub}
@@ -157,51 +141,61 @@ const OnboardingForm = ({ industries }) => {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
+                {errors.subIndustry && (
+                  <p className="text-sm text-red-500">
+                    {errors.subIndustry.message}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Experience */}
             <div className="space-y-2">
-              <Label>Years of Experience</Label>
-
+              <Label htmlFor="experience">Years of Experience</Label>
               <Input
-                ref={experienceRef}
+                id="experience"
                 type="number"
-                min={0}
-                max={50}
+                min="0"
+                max="50"
+                placeholder="Enter years of experience"
+                {...register("experience")}
               />
+              {errors.experience && (
+                <p className="text-sm text-red-500">
+                  {errors.experience.message}
+                </p>
+              )}
             </div>
 
-            {/* Skills */}
             <div className="space-y-2">
-              <Label>Skills</Label>
-
+              <Label htmlFor="skills">Skills</Label>
               <Input
-                ref={skillsRef}
-                placeholder="JavaScript, React..."
+                id="skills"
+                placeholder="e.g., Python, JavaScript, Project Management"
+                {...register("skills")}
               />
-
               <p className="text-sm text-muted-foreground">
-                Separate skills with commas.
+                Separate multiple skills with commas
               </p>
+              {errors.skills && (
+                <p className="text-sm text-red-500">{errors.skills.message}</p>
+              )}
             </div>
 
-            {/* Bio */}
             <div className="space-y-2">
-              <Label>Professional Bio</Label>
-
+              <Label htmlFor="bio">Professional Bio</Label>
               <Textarea
-                ref={bioRef}
+                id="bio"
+                placeholder="Tell us about your professional background..."
                 className="h-32"
+                {...register("bio")}
               />
+              {errors.bio && (
+                <p className="text-sm text-red-500">{errors.bio.message}</p>
+              )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
+            <Button type="submit" className="w-full" disabled={updateLoading}>
+              {updateLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
@@ -210,7 +204,6 @@ const OnboardingForm = ({ industries }) => {
                 "Complete Profile"
               )}
             </Button>
-
           </form>
         </CardContent>
       </Card>
