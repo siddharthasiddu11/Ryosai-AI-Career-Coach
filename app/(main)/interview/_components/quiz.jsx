@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import useFetch from "@/hooks/use-fetch";
 import { useEffect, useState } from "react";
-import { generateQuiz } from "@/actions/interview";
+import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import { BarLoader } from "react-spinners";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import QuizResult from "./quiz-result";
 
 const Quiz = () => {
 
@@ -19,15 +22,75 @@ const Quiz = () => {
     data: quizData,
   } = useFetch(generateQuiz);
 
+  const {
+    loading: savingResult,
+    fn: saveQuizResultFn,
+    data: resultData,
+    setData: setResultData,
+  } = useFetch(saveQuizResult)
+
+  console.log(resultData)
+
   useEffect(() => {
     if (quizData) {
       setAnswers(new Array(quizData.length).fill(null));
     }
   }, [quizData]);
 
+  const handleAnswer = (answer) => {
+    const newAnswers = [...answers];
+    newAnswers[currentQuestion] = answer;
+    setAnswers(newAnswers);
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < quizData.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setShowExplanation(false);
+    } else {
+      finishQuiz();
+    }
+  };
+
+  const calculateScore = () => {
+    let correct = 0;
+    answers.forEach((answer, index) => {
+      if (answer === quizData[index].correctAnswer) {
+        correct++
+      }
+    })
+    return (correct / quizData.length) * 100;
+  }
+
+  const finishQuiz = async () => {
+    const score = calculateScore();
+    try {
+      await saveQuizResultFn(quizData, answers, score);
+      toast.success("Quiz result saved successfully");
+    } catch (error) {
+      toast.error("Failed to save quiz result");
+    }
+  }
+
 
   if (generatingQuiz) {
     return <BarLoader className="mt-4" width={"100%"} color="gray" />;
+  }
+
+  const startNewQuiz = () => {
+    setCurrentQuestion(0);
+    setAnswers([]);
+    setShowExplanation(false);
+    generateQuizFn();
+    setResultData(null);
+  }
+
+  if (resultData) {
+    return (
+      <div>
+        <QuizResult result={resultData} onStartNew={startNewQuiz} />
+      </div>
+    )
   }
 
   if (!quizData) {
@@ -61,9 +124,9 @@ const Quiz = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-lg font-medium">
-            {question.question}
-          </p>
-          <RadioGroup
+          {question.question}
+        </p>
+        <RadioGroup
           onValueChange={handleAnswer}
           value={answers[currentQuestion]}
           className="space-y-2"
@@ -84,8 +147,22 @@ const Quiz = () => {
         )}
 
       </CardContent>
-      <CardFooter>
-
+      <CardFooter className="flex justify-between">
+        <Button
+          onClick={() => setShowExplanation(!showExplanation)}
+          variant="outline"
+        >
+          {showExplanation ? "Hide" : "Show"} Explanation
+        </Button>
+        <Button
+          onClick={handleNext}
+          disabled={!answers[currentQuestion] || savingResult}
+        >
+          {savingResult && (
+            <BarLoader className="mt-4" width={"100%"} color="gray" />
+          )}
+          {currentQuestion < quizData.length - 1 ? "Next Question" : "Finish Quiz"}
+        </Button>
       </CardFooter>
     </Card>
   )
