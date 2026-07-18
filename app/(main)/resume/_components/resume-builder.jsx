@@ -1,5 +1,5 @@
 "use client"
-import { saveResume } from '@/actions/resume';
+import { improveWithAI, saveResume } from '@/actions/resume';
 import { resumeSchema } from '@/app/lib/schema';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from '@/components/ui/textarea';
 import useFetch from '@/hooks/use-fetch';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Download, Save } from 'lucide-react'
+import { Download, Save, Sparkles, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from "react-hook-form";
 import EntryForm from './entry-form';
+import { toast } from 'sonner';
 
 
 const ResumeBuilder = ({ initialContent }) => {
@@ -21,6 +22,7 @@ const ResumeBuilder = ({ initialContent }) => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(resumeSchema),
@@ -33,6 +35,37 @@ const ResumeBuilder = ({ initialContent }) => {
       projects: [],
     },
   });
+
+  const {
+    loading: isImproving,
+    fn: improveWithAIFn,
+    data: improvedContent,
+    error: improveError,
+  } = useFetch(improveWithAI);
+
+  useEffect(() => {
+    if (improvedContent && !isImproving) {
+      setValue("summary", improvedContent);
+      toast.success("Summary improved successfully!");
+    }
+    if (improveError) {
+      toast.error(improveError.message || "Failed to improve summary");
+    }
+  }, [improvedContent, improveError, isImproving, setValue]);
+
+  const handleImproveSummary = async () => {
+    const summary = watch("summary");
+    if (!summary) {
+      toast.error("Please enter a summary first");
+      return;
+    }
+
+    await improveWithAIFn({
+      current: summary,
+      type: "summary"
+    });
+  };
+
 
   const {
     loading: isSaving,
@@ -149,6 +182,25 @@ const ResumeBuilder = ({ initialContent }) => {
                 <p className="text-sm text-red-500">{errors.summary.message}</p>
               )}
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleImproveSummary}
+              disabled={isImproving || !watch("summary")}
+            >
+              {isImproving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Improving...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Improve with AI
+                </>
+              )}
+            </Button>
 
             {/* Skills */}
             <div className="space-y-4">

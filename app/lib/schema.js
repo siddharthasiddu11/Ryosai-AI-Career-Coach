@@ -20,9 +20,9 @@ export const onboardingSchema = z.object({
   skills: z.string().transform((val) =>
     val
       ? val
-          .split(",")
-          .map((skill) => skill.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean)
       : undefined
   ),
 });
@@ -34,15 +34,14 @@ export const contactSchema = z.object({
   twitter: z.string().optional(),
 });
 
-export const entrySchema = z
-  .object({
-    title: z.string().min(1, "Title is required"),
-    organization: z.string().min(1, "Organization is required"),
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().optional(),
-    description: z.string().min(1, "Description is required"),
-    current: z.boolean().default(false),
-  })
+export const entrySchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  organization: z.string().min(1, "Organization is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
+  current: z.boolean().default(false),
+})
   .refine(
     (data) => {
       if (!data.current && !data.endDate) {
