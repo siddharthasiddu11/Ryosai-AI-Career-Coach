@@ -54,7 +54,7 @@ export default function EntryForm({ type, entries, onChange }) {
   const handleAdd = handleValidation((data) => {
     const formattedEntry = {
       ...data,
-      startDate: formatDisplayDate(data.startDate),
+      startDate: formatDisplayDate(data.startDate), 
       endDate: data.current ? "" : formatDisplayDate(data.endDate),
     };
 
