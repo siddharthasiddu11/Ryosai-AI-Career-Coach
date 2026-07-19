@@ -18,42 +18,6 @@
 
 ---
 
-## 📸 Screenshots
-
-### 🏠 Landing Page
-<img src="screenshots/landing-page.png" alt="RYOSAI Landing Page" width="100%" />
-
-### 🔐 Onboarding
-> Select your industry, skills, and experience to get personalized career insights.
-
-<img src="screenshots/onboarding.png" alt="Onboarding - Complete Your Profile" width="100%" />
-
-### 📊 Industry Insights Dashboard
-> AI-powered market analysis with salary charts, growth trends, demand levels, and skill recommendations.
-
-<img src="screenshots/dashboard.png" alt="Industry Insights Dashboard" width="100%" />
-
-### 📝 AI Resume Builder — Form View
-> Structured form with contact info, professional summary, skills, experience, education, and projects.
-
-<img src="screenshots/resume-form.png" alt="Resume Builder - Form View" width="100%" />
-
-### 📝 AI Resume Builder — Markdown Preview
-> Live Markdown preview with AI-enhanced content and PDF export.
-
-<img src="screenshots/resume-preview.png" alt="Resume Builder - Markdown Preview" width="100%" />
-
-### 🎓 Interview Preparation
-> Performance tracking with score analytics, trend charts, and AI improvement tips.
-
-<img src="screenshots/interview-prep.png" alt="Interview Preparation" width="100%" />
-
-### 🎯 Mock Interview
-> AI-generated 10-question quizzes tailored to your industry and skills.
-
-<img src="screenshots/mock-interview.png" alt="Mock Interview Start" width="100%" />
-<img src="screenshots/quiz-question.png" alt="Quiz Question with MCQ Options" width="100%" />
-
 ---
 
 ## 🎯 What is RYOSAI?
